@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Iran War: A Game Theory Analysis</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=IBM+Plex+Mono:wght@300;400;600&family=IBM+Plex+Sans:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f5f3ef;
+    --surface: #ffffff;
+    --surface2: #ede9e2;
+    --border: #d5d0c6;
+    --accent-gold: #8a5e0a;
+    --accent-red: #a02318;
+    --accent-blue: #1a4f8a;
+    --accent-green: #165f35;
+    --accent-orange: #b04e08;
+    --accent-purple: #5a2490;
+    --text: #1a1714;
+    --text-muted: #5a5248;
+    --text-dim: #9a9288;
+    --us-color: #1a4f8a;
+    --iran-color: #a02318;
+    --israel-color: #165f35;
+    --pak-color: #8a4e00;
+    --glow-gold: 0 2px 16px rgba(138,94,10,0.12);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--bg); color:var(--text); font-family:'IBM Plex Sans',sans-serif; font-size:15px; line-height:1.7; overflow-x:hidden; }
+  nav { position:fixed; top:0; left:0; right:0; z-index:100; background:rgba(245,243,239,0.97); border-bottom:1px solid var(--border); backdrop-filter:blur(12px); padding:0 2rem; display:flex; align-items:center; justify-content:space-between; height:56px; }
+  .nav-brand { font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--accent-gold); letter-spacing:.15em; text-transform:uppercase; }
+  .nav-links { display:flex; gap:.5rem; list-style:none; }
+  .nav-links a { font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--text-muted); text-decoration:none; padding:4px 10px; border-radius:3px; transition:all .2s; letter-spacing:.05em; }
+  .nav-links a:hover { color:var(--accent-gold); background:rgba(138,94,10,0.07); }
+  section { min-height:100vh; padding:100px 0 80px; position:relative; }
+  .container { max-width:1100px; margin:0 auto; padding:0 2rem; }
+  #hero { display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; background:radial-gradient(ellipse at 50% 60%,rgba(160,35,24,.06) 0%,transparent 65%),radial-gradient(ellipse at 20% 20%,rgba(26,79,138,.04) 0%,transparent 50%),var(--bg); overflow:hidden; position:relative; }
+  #hero::before { content:''; position:absolute; top:0;left:0;right:0;bottom:0; background-image:linear-gradient(rgba(0,0,0,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(0,0,0,.05) 1px,transparent 1px); background-size:60px 60px; mask-image:radial-gradient(ellipse at center,black 40%,transparent 80%); }
+  .hero-tag { font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.25em; color:var(--accent-gold); text-transform:uppercase; margin-bottom:1.5rem; border:1px solid rgba(138,94,10,.3); padding:5px 16px; border-radius:20px; background:rgba(138,94,10,.04); }
+  h1.hero-title { font-family:'Playfair Display',serif; font-size:clamp(2.5rem,6vw,5rem); font-weight:900; line-height:1.1; margin-bottom:1.5rem; background:linear-gradient(135deg,#1a1714 30%,#8a5e0a 70%); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+  .hero-sub { font-size:1.1rem; color:var(--text-muted); max-width:620px; margin:0 auto 2.5rem; font-weight:300; }
+  .hero-stats { display:flex; gap:3rem; margin-top:3rem; flex-wrap:wrap; justify-content:center; }
+  .hero-stat { text-align:center; }
+  .hero-stat-num { font-family:'IBM Plex Mono',monospace; font-size:2rem; font-weight:600; color:var(--accent-gold); display:block; }
+  .hero-stat-label { font-size:11px; color:var(--text-muted); text-transform:uppercase; letter-spacing:.1em; font-family:'IBM Plex Mono',monospace; }
+  .section-header { margin-bottom:3rem; }
+  .section-tag { font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.2em; color:var(--accent-gold); text-transform:uppercase; margin-bottom:.75rem; display:block; }
+  h2.section-title { font-family:'Playfair Display',serif; font-size:clamp(1.8rem,3.5vw,2.8rem); font-weight:700; line-height:1.2; color:var(--text); margin-bottom:1rem; }
+  .section-desc { color:var(--text-muted); max-width:680px; font-weight:300; }
+  .divider { width:60px; height:2px; background:linear-gradient(90deg,var(--accent-gold),transparent); margin:1.5rem 0; }
+  #players { background:var(--surface); }
+  .players-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:1.5rem; margin-top:2rem; }
+  .player-card { background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:1.8rem; position:relative; overflow:hidden; transition:transform .2s,box-shadow .2s; }
+  .player-card:hover { transform:translateY(-2px); }
+  .player-card::before { content:''; position:absolute; top:0;left:0;right:0; height:3px; }
+  .player-card.us::before { background:var(--us-color); }
+  .player-card.iran::before { background:var(--iran-color); }
+  .player-card.israel::before { background:var(--israel-color); }
+  .player-card.pak::before { background:var(--pak-color); }
+  .player-card.us:hover { box-shadow:0 8px 30px rgba(26,79,138,.1); }
+  .player-card.iran:hover { box-shadow:0 8px 30px rgba(160,35,24,.1); }
+  .player-card.israel:hover { box-shadow:0 8px 30px rgba(22,95,53,.1); }
+  .player-card.pak:hover { box-shadow:0 8px 30px rgba(138,78,0,.1); }
+  .player-header { display:flex; align-items:center; gap:1rem; margin-bottom:1.2rem; }
+  .player-flag { font-size:2rem; }
+  .player-name { font-family:'Playfair Display',serif; font-size:1.2rem; font-weight:700; color:var(--text); }
+  .player-role { font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--text-muted); letter-spacing:.1em; text-transform:uppercase; }
+  .player-utility { margin-top:1.2rem; padding-top:1.2rem; border-top:1px solid var(--border); }
+  .utility-label { font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--text-muted); text-transform:uppercase; letter-spacing:.1em; margin-bottom:.6rem; }
+  .utility-list { list-style:none; display:flex; flex-direction:column; gap:4px; }
+  .utility-list li { font-size:13px; color:var(--text); padding-left:1rem; position:relative; }
+  .utility-list li::before { content:'→'; position:absolute; left:0; color:var(--accent-gold); font-size:11px; }
+  .quote-block { background:rgba(138,94,10,.05); border-left:2px solid var(--accent-gold); padding:.7rem 1rem; margin-top:1rem; font-size:12px; color:var(--text-muted); font-style:italic; }
+  #timeline { background:var(--bg); }
+  .timeline { position:relative; margin-top:2rem; }
+  .timeline::before { content:''; position:absolute; left:140px; top:0;bottom:0; width:1px; background:linear-gradient(to bottom,transparent,var(--border) 10%,var(--border) 90%,transparent); }
+  .tl-item { display:flex; gap:2rem; margin-bottom:2.5rem; align-items:flex-start; }
+  .tl-date { width:120px; flex-shrink:0; font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--accent-gold); text-align:right; padding-top:4px; letter-spacing:.05em; }
+  .tl-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; margin-top:6px; position:relative; z-index:1; }
+  .tl-dot.escalation { background:var(--accent-red); box-shadow:0 0 6px rgba(160,35,24,.35); }
+  .tl-dot.diplomacy  { background:var(--accent-blue); box-shadow:0 0 6px rgba(26,79,138,.35); }
+  .tl-dot.war        { background:var(--iran-color); box-shadow:0 0 8px rgba(160,35,24,.5); }
+  .tl-dot.mediation  { background:var(--pak-color); box-shadow:0 0 6px rgba(138,78,0,.35); }
+  .tl-content { flex:1; background:var(--surface); border:1px solid var(--border); border-radius:6px; padding:1.2rem; }
+  .tl-title { font-family:'IBM Plex Sans',sans-serif; font-weight:600; font-size:14px; color:var(--text); margin-bottom:.4rem; }
+  .tl-desc { font-size:13px; color:var(--text-muted); margin-bottom:.6rem; }
+  .tl-gt { font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--accent-gold); background:rgba(138,94,10,.07); padding:4px 8px; border-radius:3px; display:inline-block; }
+  #payoffs { background:var(--surface); }
+  .matrix-container { margin-bottom:3rem; }
+  .matrix-title { font-family:'Playfair Display',serif; font-size:1.1rem; font-weight:700; color:var(--text); margin-bottom:.5rem; }
+  .matrix-desc { font-size:13px; color:var(--text-muted); margin-bottom:1.2rem; }
+  .payoff-table { width:100%; border-collapse:collapse; font-family:'IBM Plex Mono',monospace; font-size:13px; overflow:hidden; border-radius:6px; }
+  .payoff-table th { background:var(--surface2); padding:.7rem 1rem; text-align:center; font-size:11px; text-transform:uppercase; letter-spacing:.1em; color:var(--text-muted); border:1px solid var(--border); }
+  .payoff-table td { padding:.75rem 1rem; text-align:center; border:1px solid var(--border); background:var(--surface2); transition:background .2s; }
+  .payoff-table tr:hover td { background:rgba(138,94,10,.04); }
+  .payoff-table td.row-header { font-weight:600; color:var(--text); text-align:left; background:var(--surface); }
+  .pv-high { color:#165f35; }
+  .pv-mid  { color:var(--accent-gold); }
+  .pv-low  { color:#a02318; }
+  .pv-nash { background:rgba(138,94,10,.09) !important; border:1px solid rgba(138,94,10,.35) !important; }
+  .nash-label { font-size:9px; color:var(--accent-gold); display:block; opacity:.8; }
+  #gametree { background:var(--bg); }
+  .tree-svg-wrap { background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:2rem; overflow-x:auto; }
+  #scenarios { background:var(--surface); }
+  .scenarios-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:1.5rem; margin-top:2rem; }
+  .scenario-card { background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:1.6rem; }
+  .scenario-prob { font-family:'IBM Plex Mono',monospace; font-size:2rem; font-weight:600; margin-bottom:.5rem; }
+  .scenario-name { font-family:'Playfair Display',serif; font-size:1.05rem; font-weight:700; color:var(--text); margin-bottom:.5rem; }
+  .scenario-desc { font-size:12.5px; color:var(--text-muted); margin-bottom:1rem; }
+  .scenario-tag { font-family:'IBM Plex Mono',monospace; font-size:10px; padding:3px 8px; border-radius:3px; text-transform:uppercase; letter-spacing:.1em; }
+  .tag-war   { background:rgba(160,35,24,.09);  color:#a02318; }
+  .tag-deal  { background:rgba(22,95,53,.09);   color:#165f35; }
+  .tag-stale { background:rgba(138,94,10,.10);  color:var(--accent-gold); }
+  .tag-chaos { background:rgba(90,36,144,.09);  color:#5a2490; }
+  .prob-bar { height:3px; border-radius:2px; margin-top:1rem; }
+  #pakistan { background:var(--bg); }
+  .dilemma-grid { display:grid; grid-template-columns:1fr 1fr; gap:2rem; margin-top:2rem; }
+  .dilemma-card { background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:1.8rem; }
+  .dilemma-title { font-family:'IBM Plex Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:.15em; margin-bottom:1rem; padding-bottom:.8rem; border-bottom:1px solid var(--border); }
+  .dilemma-title.us-side   { color:var(--us-color); }
+  .dilemma-title.iran-side { color:var(--iran-color); }
+  .payoff-row { display:flex; justify-content:space-between; padding:.5rem 0; border-bottom:1px solid rgba(213,208,198,.7); font-size:13px; }
+  .payoff-row:last-child { border-bottom:none; }
+  .payoff-key { color:var(--text-muted); }
+  .payoff-val { font-family:'IBM Plex Mono',monospace; font-weight:600; }
+  #dominance { background:var(--surface); }
+  .dom-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:1.5rem; margin-top:2rem; }
+  .dom-card { background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:1.6rem; }
+  .dom-player { font-family:'IBM Plex Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:.15em; margin-bottom:.8rem; }
+  .dom-strategy { display:flex; flex-direction:column; gap:.8rem; margin-top:1rem; }
+  .strat-row { display:flex; align-items:center; gap:1rem; }
+  .strat-label { font-size:12px; color:var(--text); flex:1; }
+  .strat-bar-wrap { flex:2; height:6px; background:var(--border); border-radius:3px; overflow:hidden; }
+  .strat-bar { height:100%; border-radius:3px; transition:width 1.5s ease; }
+  .strat-score { font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--text-muted); width:40px; text-align:right; }
+  #conclusion { background:radial-gradient(ellipse at 50% 100%,rgba(138,94,10,.07) 0%,transparent 60%),var(--bg); }
+  .equilibrium-box { background:var(--surface); border:1px solid rgba(138,94,10,.25); border-radius:8px; padding:2rem; margin-top:2rem; box-shadow:var(--glow-gold); }
+  .eq-title { font-family:'IBM Plex Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:.15em; color:var(--accent-gold); margin-bottom:1.5rem; }
+  .eq-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:1.5rem; margin-bottom:1.5rem; }
+  .eq-item { text-align:center; }
+  .eq-actor { font-family:'IBM Plex Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:.1em; color:var(--text-muted); margin-bottom:.5rem; }
+  .eq-strategy { font-size:13px; font-weight:600; color:var(--text); }
+  .eq-outcome { font-size:11px; color:var(--text-muted); margin-top:.3rem; font-family:'IBM Plex Mono',monospace; }
+  .final-verdict { background:rgba(138,94,10,.04); border:1px solid rgba(138,94,10,.14); border-radius:6px; padding:1.5rem; margin-top:1.5rem; font-size:14px; color:var(--text); line-height:1.8; }
+  .calc-wrap { display:grid; grid-template-columns:1fr 1fr; gap:2rem; margin-top:2rem; }
+  .calc-controls, .calc-output { background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:1.8rem; }
+  .slider-group { margin-bottom:1.5rem; }
+  .slider-label { display:flex; justify-content:space-between; margin-bottom:.5rem; font-size:12px; color:var(--text-muted); }
+  .slider-val { font-family:'IBM Plex Mono',monospace; color:var(--accent-gold); }
+  input[type=range] { width:100%; -webkit-appearance:none; height:4px; background:var(--border); border-radius:2px; outline:none; }
+  input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:14px; height:14px; border-radius:50%; background:var(--accent-gold); cursor:pointer; }
+  .outcome-bar-group { margin-bottom:1.2rem; }
+  .outcome-bar-label { display:flex; justify-content:space-between; margin-bottom:.4rem; font-size:12px; }
+  .outcome-bar-name { color:var(--text); }
+  .outcome-bar-pct { font-family:'IBM Plex Mono',monospace; color:var(--accent-gold); }
+  .outcome-bar-track { height:8px; background:var(--border); border-radius:4px; overflow:hidden; }
+  .outcome-bar-fill { height:100%; border-radius:4px; transition:width .5s ease; }
+  .sources-box { background:var(--surface2); border:1px solid var(--border); border-radius:6px; padding:1.2rem 1.5rem; margin-top:2rem; font-size:11px; color:var(--text-dim); font-family:'IBM Plex Mono',monospace; }
+  .sources-box strong { color:var(--text-muted); }
+  .fade-up { opacity:0; transform:translateY(20px); transition:opacity .6s ease,transform .6s ease; }
+  .fade-up.visible { opacity:1; transform:translateY(0); }
+  @media(max-width:768px){
+    .players-grid,.dilemma-grid,.dom-grid,.calc-wrap{grid-template-columns:1fr;}
+    .scenarios-grid{grid-template-columns:1fr;}
+    .eq-grid{grid-template-columns:repeat(2,1fr);}
+    .nav-links{display:none;}
+    .timeline::before{left:80px;}
+    .tl-date{width:65px;font-size:10px;}
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-brand">Iran War · Game Theory</div>
+  <ul class="nav-links">
+    <li><a href="#players">Players</a></li>
+    <li><a href="#timeline">Timeline</a></li>
+    <li><a href="#payoffs">Payoffs</a></li>
+    <li><a href="#gametree">Game Tree</a></li>
+    <li><a href="#scenarios">Scenarios</a></li>
+    <li><a href="#conclusion">Equilibrium</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="container">
+    <div class="hero-tag">Game Theory · Strategic Analysis · March 2026</div>
+    <h1 class="hero-title">The Iran War:<br>A Nash Equilibrium<br>You Cannot Escape</h1>
+    <p class="hero-sub">A rigorous game-theoretic dissection of the multi-player conflict between the United States, Iran, Israel, and Pakistan — mapping strategies, payoffs, dominant strategies, and the equilibria that explain why this war persists.</p>
+    <div class="hero-stats">
+      <div class="hero-stat"><span class="hero-stat-num">4</span><span class="hero-stat-label">Key Players</span></div>
+      <div class="hero-stat"><span class="hero-stat-num">15</span><span class="hero-stat-label">US Peace Points</span></div>
+      <div class="hero-stat"><span class="hero-stat-num">1,500+</span><span class="hero-stat-label">Iranian Casualties</span></div>
+      <div class="hero-stat"><span class="hero-stat-num">90%</span><span class="hero-stat-label">Pak Oil via Hormuz</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- CH1: PLAYERS -->
+<section id="players">
+  <div class="container">
+    <div class="section-header fade-up">
+      <span class="section-tag">Chapter 1</span>
+      <h2 class="section-title">The Players & Their Utility Functions</h2>
+      <div class="divider"></div>
+      <p class="section-desc">In game theory, each player has a utility function — a ranking of outcomes by preference. Understanding what each actor maximises is the foundation of the entire analysis. These are not abstract figures; each preference is grounded in real statements and behaviour.</p>
+    </div>
+    <div class="players-grid">
+      <div class="player-card us fade-up">
+        <div class="player-header"><span class="player-flag">🇺🇸</span><div><div class="player-name">Trump / United States</div><div class="player-role">Dominant Player · Rational Transactionalist</div></div></div>
+        <p style="font-size:13px;color:var(--text-muted);margin-bottom:.8rem;">Trump is a coercive dealmaker. His strategy is <em>maximum pressure → offer deal</em>. He does not seek permanent war; he seeks a televised victory monetisable diplomatically and economically (Hormuz oil flows, market stability).</p>
+        <div class="player-utility">
+          <div class="utility-label">Utility Ranking (Best → Worst)</div>
+          <ul class="utility-list">
+            <li>Denuclearised Iran + open Hormuz + US controls "nuclear dust"</li>
+            <li>Regime change → pro-US government (Venezuela model)</li>
+            <li>Managed ceasefire with face-saving terms</li>
+            <li>Prolonged war → market chaos + US casualties</li>
+            <li>Ground invasion quagmire (worst case)</li>
+          </ul>
+        </div>
+        <div class="quote-block">"We want the nuclear dust. We're going to want that, and I think we're going to get that." — Trump, March 2026</div>
+      </div>
+      <div class="player-card iran fade-up">
+        <div class="player-header"><span class="player-flag">🇮🇷</span><div><div class="player-name">Iran / IRGC</div><div class="player-role">Survival-Maximiser · Asymmetric Resister</div></div></div>
+        <p style="font-size:13px;color:var(--text-muted);margin-bottom:.8rem;">Iran's utility is regime survival above all. Its nuclear programme is an <em>existential deterrence card</em>. Enriched uranium is both leverage and shield. The new supreme leader Mojtaba Khamenei is unseen; the IRGC may be the true decision-maker now.</p>
+        <div class="player-utility">
+          <div class="utility-label">Utility Ranking (Best → Worst)</div>
+          <ul class="utility-list">
+            <li>Ceasefire with sovereignty preserved + sanctions lifted</li>
+            <li>Prolonged resistance → US war fatigue → negotiated exit</li>
+            <li>Hormuz as leverage chip in negotiations</li>
+            <li>Nuclear capability traded for full sanctions relief</li>
+            <li>Regime collapse / occupied Tehran (catastrophic)</li>
+          </ul>
+        </div>
+        <div class="quote-block">"Iran is negotiating with itself." — Iranian officials dismissing Trump's claims, March 2026</div>
+      </div>
+      <div class="player-card israel fade-up">
+        <div class="player-header"><span class="player-flag">🇮🇱</span><div><div class="player-name">Netanyahu / Israel</div><div class="player-role">Maximalist · Regime-Change Hawk</div></div></div>
+        <p style="font-size:13px;color:var(--text-muted);margin-bottom:.8rem;">Netanyahu has dual utility: strategic (eliminate Iranian threat) and personal (ICC warrant, corruption charges, political survival). A premature deal that leaves Iran in place looks like failure to 93% of Israelis who support regime change. He is a veto player on any ceasefire Trump offers.</p>
+        <div class="player-utility">
+          <div class="utility-label">Utility Ranking (Best → Worst)</div>
+          <ul class="utility-list">
+            <li>Regime collapse + Reza Pahlavi / allied government in Tehran</li>
+            <li>Iran militarily castrated — "mowing the grass" indefinitely</li>
+            <li>US-brokered deal that strips Iran of nukes + proxies</li>
+            <li>Premature ceasefire that lets Iran reconstitute</li>
+            <li>Trump abandons war → Iran survives intact</li>
+          </ul>
+        </div>
+        <div class="quote-block">"You can't make a revolution from the air — there must be a ground component." — Netanyahu, March 2026</div>
+      </div>
+      <div class="player-card pak fade-up">
+        <div class="player-header"><span class="player-flag">🇵🇰</span><div><div class="player-name">Pakistan</div><div class="player-role">Mediator · Trapped Neighbour · Strategic Broker</div></div></div>
+        <p style="font-size:13px;color:var(--text-muted);margin-bottom:.8rem;">Pakistan shares a 900km border with Iran, gets 90% of its oil through Hormuz, has a large Shia population, and has spent the past year cultivating Trump's trust. It is simultaneously Iran's neighbour and America's preferred messenger. A ground invasion would force Islamabad to choose sides — a choice with no good answer.</p>
+        <div class="player-utility">
+          <div class="utility-label">Utility Ranking (Best → Worst)</div>
+          <ul class="utility-list">
+            <li>Successful mediation → diplomatic capital + Hormuz reopens</li>
+            <li>War ends before ground invasion → Pakistan uninvolved</li>
+            <li>Limited role as message-relay channel (current position)</li>
+            <li>Ground invasion + Pakistan forced to grant basing rights</li>
+            <li>Full escalation → sectarian spillover across the border</li>
+          </ul>
+        </div>
+        <div class="quote-block">"Pakistan stands ready and honoured to be the host for meaningful and conclusive talks." — PM Shehbaz Sharif, March 2026</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CH2: TIMELINE -->
+<section id="timeline">
+  <div class="container">
+    <div class="section-header fade-up">
+      <span class="section-tag">Chapter 2</span>
+      <h2 class="section-title">Strategic Timeline: Moves in the Game</h2>
+      <div class="divider"></div>
+      <p class="section-desc">Game theory sees history as a sequence of moves. Each move signals information, updates beliefs, and changes the payoff landscape. Here is the actual game as it unfolded — annotated with the game-theoretic mechanism at work.</p>
+    </div>
+    <div class="timeline fade-up">
+      <div class="tl-item">
+        <div class="tl-date">APR 2025</div>
+        <div class="tl-dot diplomacy"></div>
+        <div class="tl-content">
+          <div class="tl-title">Round 1 — Oman Talks: Indirect Signalling Game</div>
+          <div class="tl-desc">Iran and the US begin indirect talks in Muscat via Omani mediators. Each delegation in separate rooms — classic cheap-talk signalling. Iran proposes a 3-step plan; Trump offers 60-day deadline. Oman declares deal is "within reach."</div>
+          <span class="tl-gt">🎯 GT Mechanism: Incomplete Information Game — neither side fully reveals reservation price. Iran's true red line (enrichment rights) is withheld.</span>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-date">FEB 25, 2026</div>
+        <div class="tl-dot diplomacy"></div>
+        <div class="tl-content">
+          <div class="tl-title">Araghchi: Deal "Within Reach" — Commitment Problem</div>
+          <div class="tl-desc">Iranian FM Abbas Araghchi publicly declares a "historic" agreement is within reach ahead of Geneva talks. This openness creates a vulnerability — it signals Iran's desire to avoid war, reducing Iran's commitment to fight.</div>
+          <span class="tl-gt">🎯 GT Mechanism: Credible Commitment Problem — public openness undermines Iran's threat to resist, emboldening Israel's hawks.</span>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-date">FEB 28, 2026</div>
+        <div class="tl-dot war"></div>
+        <div class="tl-content">
+          <div class="tl-title">Operation Epic Fury: Pre-emptive Strike During Active Diplomacy</div>
+          <div class="tl-desc">US and Israel launch massive coordinated strikes. Supreme Leader Khamenei assassinated. Nuclear sites at Natanz, Isfahan, Fordow struck. Launched during active diplomacy — Israel reportedly feared a deal would let Iran survive intact.</div>
+          <span class="tl-gt">🎯 GT Mechanism: Pre-emptive First-Mover Strategy — Israel eliminates the diplomatic option before Trump can exercise it.</span>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-date">MAR 2, 2026</div>
+        <div class="tl-dot escalation"></div>
+        <div class="tl-content">
+          <div class="tl-title">Hegseth: "Not a Regime Change War" — Internal Incoherence</div>
+          <div class="tl-desc">US Defense Sec. Pete Hegseth contradicts Trump's Feb 28 framing. Trump backs off promoting regime collapse; Netanyahu continues calling for it. US war aims become a moving target — signal of an incomplete contract between allies.</div>
+          <span class="tl-gt">🎯 GT Mechanism: Intra-Coalition Game — Trump and Netanyahu have different utility functions inside the same coalition. A game within a game.</span>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-date">MAR 15–20, 2026</div>
+        <div class="tl-dot escalation"></div>
+        <div class="tl-content">
+          <div class="tl-title">Hormuz Closure — Strait as Brinkmanship Device</div>
+          <div class="tl-desc">Iran's IRGC closes Hormuz. Iran frames control of the Strait as a "financial asset." Global oil markets roil. Trump issues 48-hr ultimatum. Iran fires daily barrages at Israel and US bases.</div>
+          <span class="tl-gt">🎯 GT Mechanism: Schelling Brinkmanship — Hormuz is a "doomsday device" that harms both parties. Classic compellence: "hurt you more than it hurts me."</span>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-date">MAR 23, 2026</div>
+        <div class="tl-dot mediation"></div>
+        <div class="tl-content">
+          <div class="tl-title">Pakistan Enters: 15-Point Plan Delivered via Islamabad</div>
+          <div class="tl-desc">Pakistan ISI chief Asim Malik speaks with Witkoff and Kushner. PM Sharif calls Pezeshkian. Pakistan delivers US 15-point plan to Iran. Plan includes 30-day ceasefire, uranium removal, missile limits, proxy cessation, Israel recognition. Iran calls Trump "deceitful."</div>
+          <span class="tl-gt">🎯 GT Mechanism: Mediator as Credibility Broker — Pakistan's value is its simultaneous trust relationship with both parties. Iran's public denial is a Face-Saving Device.</span>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-date">MAR 25–26, 2026</div>
+        <div class="tl-dot mediation"></div>
+        <div class="tl-content">
+          <div class="tl-title">Trump's 5-Day Pause + "Productive Conversations" Claim</div>
+          <div class="tl-desc">Trump postpones energy infrastructure strikes, claims progress in talks. Markets rally. Iran parliament speaker Qalibaf denies talks. Iran FM Baghaei acknowledges Iran received messages from "friendly states." US agrees "in principle" to talks in Islamabad. Netanyahu: "more to come."</div>
+          <span class="tl-gt">🎯 GT Mechanism: Strategic Ambiguity — Iran preserves both the option to talk and the option to fight without committing to either. The classic fog-of-war equilibrium.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CH3: PAYOFF MATRICES -->
+<section id="payoffs">
+  <div class="container">
+    <div class="section-header fade-up">
+      <span class="section-tag">Chapter 3</span>
+      <h2 class="section-title">The Payoff Matrices</h2>
+      <div class="divider"></div>
+      <p class="section-desc">We construct three 2×2 payoff matrices — the core analytical tool of game theory. Payoffs are ordinal: 4 = best, 1 = worst. <strong style="color:var(--accent-gold)">★ Nash Equilibria</strong> are marked.</p>
+    </div>
+
+    <div class="matrix-container fade-up">
+      <div class="matrix-title">Matrix 1: United States vs. Iran — The Core Prisoner's Dilemma</div>
+      <div class="matrix-desc">Iran strategies: <em>Negotiate</em> vs <em>Resist</em>. US strategies: <em>Deal</em> vs <em>Escalate</em>. Payoffs: (US, Iran).</div>
+      <table class="payoff-table">
+        <thead><tr><th style="width:160px">US ↓ / Iran →</th><th>IRAN: Negotiate</th><th>IRAN: Resist / Deny Talks</th></tr></thead>
+        <tbody>
+          <tr>
+            <td class="row-header">US: Offer Deal</td>
+            <td class="pv-high">(3, 3)<span class="nash-label">Pareto Optimal — mutual best if trust exists</span></td>
+            <td class="pv-low">(1, 4)<span class="nash-label">Iran gets leverage; US looks weak</span></td>
+          </tr>
+          <tr>
+            <td class="row-header">US: Escalate</td>
+            <td class="pv-mid">(4, 1)<span class="nash-label">US wins militarily; Iran capitulates</span></td>
+            <td class="pv-nash"><span class="pv-mid">★ (2, 2)</span><span class="nash-label">Nash Equilibrium — mutual hurt, neither deviates unilaterally</span></td>
+          </tr>
+        </tbody>
+      </table>
+      <p style="font-size:12px;color:var(--text-muted);margin-top:.8rem;font-family:'IBM Plex Mono',monospace;background:var(--surface2);padding:.8rem;border-radius:4px;border:1px solid var(--border);">⚠ The Nash Equilibrium (Escalate, Resist) = (2,2) is <strong style="color:var(--accent-red)">Pareto Inefficient</strong>. Both players are worse off than (Deal, Negotiate)=(3,3). Iran's fear of 2018-style JCPOA betrayal and US fear of Iran stalling drive both into this inferior equilibrium. <strong style="color:var(--accent-gold)">Rational actors, irrational collective outcome.</strong></p>
+    </div>
+
+    <div class="matrix-container fade-up">
+      <div class="matrix-title">Matrix 2: Trump vs. Netanyahu — The Alliance Game</div>
+      <div class="matrix-desc">The war-within-the-war. Trump wants a deal; Netanyahu wants escalation. Payoffs: (Trump, Netanyahu).</div>
+      <table class="payoff-table">
+        <thead><tr><th style="width:160px">Trump ↓ / Bibi →</th><th>BIBI: Support Ceasefire</th><th>BIBI: Continue Strikes</th></tr></thead>
+        <tbody>
+          <tr>
+            <td class="row-header">TRUMP: Push Deal</td>
+            <td class="pv-high">(4, 2)<span class="nash-label">Trump wins; Netanyahu accepts reduced goal</span></td>
+            <td class="pv-low">(1, 4)<span class="nash-label">Netanyahu sabotages Trump's deal narrative</span></td>
+          </tr>
+          <tr>
+            <td class="row-header">TRUMP: Back Escalation</td>
+            <td class="pv-mid">(2, 3)<span class="nash-label">Israel weakens Iran; Trump accepts delayed deal</span></td>
+            <td class="pv-nash"><span class="pv-mid">★ (3, 4)</span><span class="nash-label">Nash Equilibrium — Netanyahu dominates; Trump backs it to maintain alliance</span></td>
+          </tr>
+        </tbody>
+      </table>
+      <p style="font-size:12px;color:var(--text-muted);margin-top:.8rem;font-family:'IBM Plex Mono',monospace;background:var(--surface2);padding:.8rem;border-radius:4px;border:1px solid var(--border);">⚠ Netanyahu has a <strong style="color:var(--accent-green)">strictly dominant strategy: Continue Strikes</strong> regardless of Trump's move (4 &gt; 3, and 4 &gt; 2). Trump's best response is to <em>Back Escalation</em>. This explains why the war persists even as Trump claims diplomacy is working.</p>
+    </div>
+
+    <div class="matrix-container fade-up">
+      <div class="matrix-title">Matrix 3: Pakistan's Two-Front Dilemma</div>
+      <div class="matrix-desc">Pakistan must simultaneously manage relationships with the US and Iran. Payoffs: (Pak-US score, Pak-Iran score).</div>
+      <table class="payoff-table">
+        <thead><tr><th style="width:180px">Pakistan Strategy ↓ / Outcome →</th><th>War Escalates to Ground</th><th>Ceasefire Achieved</th></tr></thead>
+        <tbody>
+          <tr>
+            <td class="row-header">Pakistan: Full Pro-US Mediation</td>
+            <td class="pv-low">(1, 1)<span class="nash-label">Worst: Iran sanctions Pak; sectarian unrest; Afghan border risk</span></td>
+            <td class="pv-high">(4, 3)<span class="nash-label">Best: Pakistan as peacemaker; Hormuz reopens; diplomatic capital</span></td>
+          </tr>
+          <tr>
+            <td class="row-header">Pakistan: Neutral Message-Relay</td>
+            <td class="pv-mid">(2, 3)<span class="nash-label">Iran approves; US frustrated; Pakistan hurt by Hormuz closure</span></td>
+            <td class="pv-nash"><span class="pv-mid">★ (3, 4)</span><span class="nash-label">Nash Equilibrium (conditional) — Pakistan preserves both relationships</span></td>
+          </tr>
+        </tbody>
+      </table>
+      <p style="font-size:12px;color:var(--text-muted);margin-top:.8rem;font-family:'IBM Plex Mono',monospace;background:var(--surface2);padding:.8rem;border-radius:4px;border:1px solid var(--border);">⚠ Pakistan's dominant strategy is <strong style="color:var(--pak-color)">Neutral Message-Relay</strong> — it maximises expected utility across scenarios. Pakistan only deviates to Full Mediation if it believes a deal is genuinely achievable. Currently, that belief is fragile.</p>
+    </div>
+  </div>
+</section>
+
+<!-- CH4: GAME TREE -->
+<section id="gametree">
+  <div class="container">
+    <div class="section-header fade-up">
+      <span class="section-tag">Chapter 4</span>
+      <h2 class="section-title">The Extensive Form: How This Game Actually Plays Out</h2>
+      <div class="divider"></div>
+      <p class="section-desc">The extensive-form game tree shows the sequential nature of decisions. We solve by <strong style="color:var(--accent-gold)">backward induction</strong> — reasoning from the end of the tree to the beginning to find the subgame perfect equilibrium.</p>
+    </div>
+    <div class="tree-svg-wrap fade-up">
+      <svg viewBox="0 0 980 600" xmlns="http://www.w3.org/2000/svg" style="width:100%;font-family:'IBM Plex Mono',monospace;">
+        <defs>
+          <marker id="arr"      markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#9a9288"/></marker>
+          <marker id="arr-gold" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#8a5e0a"/></marker>
+          <marker id="arr-red"  markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#a02318"/></marker>
+        </defs>
+        <!-- ROOT: Trump -->
+        <circle cx="90" cy="300" r="28" fill="#e8f0f8" stroke="#1a4f8a" stroke-width="2"/>
+        <text x="90" y="295" text-anchor="middle" fill="#1a4f8a" font-size="9" font-weight="bold">TRUMP</text>
+        <text x="90" y="307" text-anchor="middle" fill="#1a4f8a" font-size="8">Move 1</text>
+        <!-- Branches from Trump -->
+        <line x1="118" y1="283" x2="230" y2="180" stroke="#8a5e0a" stroke-width="1.5" marker-end="url(#arr-gold)"/>
+        <text x="162" y="218" fill="#8a5e0a" font-size="10" text-anchor="middle">DEAL</text>
+        <line x1="118" y1="317" x2="230" y2="420" stroke="#a02318" stroke-width="1.5" marker-end="url(#arr-red)"/>
+        <text x="162" y="383" fill="#a02318" font-size="10" text-anchor="middle">ESCALATE</text>
+        <!-- Netanyahu nodes -->
+        <circle cx="260" cy="170" r="26" fill="#eaf5ee" stroke="#165f35" stroke-width="2"/>
+        <text x="260" y="165" text-anchor="middle" fill="#165f35" font-size="8" font-weight="bold">BIBI</text>
+        <text x="260" y="177" text-anchor="middle" fill="#165f35" font-size="7">Move 2a</text>
+        <circle cx="260" cy="430" r="26" fill="#eaf5ee" stroke="#165f35" stroke-width="2"/>
+        <text x="260" y="425" text-anchor="middle" fill="#165f35" font-size="8" font-weight="bold">BIBI</text>
+        <text x="260" y="437" text-anchor="middle" fill="#165f35" font-size="7">Move 2b</text>
+        <!-- Bibi upper branches -->
+        <line x1="286" y1="157" x2="390" y2="110" stroke="#8a5e0a" stroke-width="1.5" marker-end="url(#arr-gold)"/>
+        <text x="340" y="123" fill="#8a5e0a" font-size="9" text-anchor="middle">SUPPORT</text>
+        <line x1="286" y1="183" x2="390" y2="230" stroke="#a02318" stroke-width="1.5" marker-end="url(#arr-red)"/>
+        <text x="340" y="215" fill="#a02318" font-size="9" text-anchor="middle">OBSTRUCT</text>
+        <!-- Bibi lower branches -->
+        <line x1="286" y1="417" x2="390" y2="370" stroke="#8a5e0a" stroke-width="1.5" marker-end="url(#arr-gold)"/>
+        <text x="335" y="385" fill="#8a5e0a" font-size="9" text-anchor="middle">ACCEPT</text>
+        <line x1="286" y1="443" x2="390" y2="500" stroke="#a02318" stroke-width="1.5" marker-end="url(#arr-red)"/>
+        <text x="335" y="482" fill="#a02318" font-size="9" text-anchor="middle">ESCALATE</text>
+        <!-- Iran nodes -->
+        <circle cx="420" cy="100" r="24" fill="#faecea" stroke="#a02318" stroke-width="2"/>
+        <text x="420" y="95"  text-anchor="middle" fill="#a02318" font-size="8" font-weight="bold">IRAN</text>
+        <text x="420" y="107" text-anchor="middle" fill="#a02318" font-size="7">Move 3a</text>
+        <circle cx="420" cy="240" r="24" fill="#faecea" stroke="#a02318" stroke-width="2"/>
+        <text x="420" y="235" text-anchor="middle" fill="#a02318" font-size="8" font-weight="bold">IRAN</text>
+        <text x="420" y="247" text-anchor="middle" fill="#a02318" font-size="7">Move 3b</text>
+        <circle cx="420" cy="360" r="24" fill="#faecea" stroke="#a02318" stroke-width="2"/>
+        <text x="420" y="355" text-anchor="middle" fill="#a02318" font-size="8" font-weight="bold">IRAN</text>
+        <text x="420" y="367" text-anchor="middle" fill="#a02318" font-size="7">Move 3c</text>
+        <circle cx="420" cy="500" r="24" fill="#faecea" stroke="#a02318" stroke-width="2"/>
+        <text x="420" y="495" text-anchor="middle" fill="#a02318" font-size="8" font-weight="bold">IRAN</text>
+        <text x="420" y="507" text-anchor="middle" fill="#a02318" font-size="7">Move 3d</text>
+        <!-- Terminal: Deal Struck -->
+        <line x1="444" y1="90"  x2="555" y2="60"  stroke="#165f35" stroke-width="1.5" marker-end="url(#arr)"/>
+        <text x="498" y="67" fill="#8a5e0a" font-size="8.5" text-anchor="middle">ACCEPT</text>
+        <rect x="556" y="38"  width="160" height="42" rx="4" fill="#eaf5ee" stroke="#165f35" stroke-width="1.5"/>
+        <text x="636" y="55" text-anchor="middle" fill="#165f35" font-size="9" font-weight="bold">DEAL STRUCK ★</text>
+        <text x="636" y="68" text-anchor="middle" fill="#5a5248" font-size="8">US(3) Iran(3) Pak(4)</text>
+        <!-- Terminal: Stalemate -->
+        <line x1="444" y1="110" x2="555" y2="130" stroke="#a02318" stroke-width="1.5" marker-end="url(#arr)"/>
+        <text x="498" y="125" fill="#a02318" font-size="8.5" text-anchor="middle">REJECT</text>
+        <rect x="556" y="110" width="160" height="42" rx="4" fill="#faecea" stroke="#a02318" stroke-width="1.5"/>
+        <text x="636" y="127" text-anchor="middle" fill="#a02318" font-size="9" font-weight="bold">STALEMATE</text>
+        <text x="636" y="140" text-anchor="middle" fill="#5a5248" font-size="8">US(2) Iran(3) Pak(2)</text>
+        <!-- Terminal: Bibi Sabotages -->
+        <line x1="444" y1="240" x2="700" y2="230" stroke="#9a9288" stroke-width="1.5" marker-end="url(#arr)"/>
+        <rect x="701" y="210" width="160" height="42" rx="4" fill="#fef9ec" stroke="#8a5e0a" stroke-width="1.5"/>
+        <text x="781" y="227" text-anchor="middle" fill="#8a5e0a" font-size="9" font-weight="bold">BIBI SABOTAGES</text>
+        <text x="781" y="240" text-anchor="middle" fill="#5a5248" font-size="8">US(1) Israel(4) Iran(2)</text>
+        <!-- Terminal: Forced Ceasefire -->
+        <line x1="444" y1="350" x2="555" y2="320" stroke="#8a5e0a" stroke-width="1.5" marker-end="url(#arr)"/>
+        <rect x="556" y="298" width="160" height="42" rx="4" fill="#fef9ec" stroke="#8a5e0a" stroke-width="1.5"/>
+        <text x="636" y="315" text-anchor="middle" fill="#8a5e0a" font-size="9" font-weight="bold">FORCED CEASEFIRE</text>
+        <text x="636" y="328" text-anchor="middle" fill="#5a5248" font-size="8">US(3) Iran(2) Pak(3)</text>
+        <!-- Terminal: Prolonged War -->
+        <line x1="444" y1="370" x2="555" y2="410" stroke="#a02318" stroke-width="1.5" marker-end="url(#arr)"/>
+        <rect x="556" y="390" width="160" height="42" rx="4" fill="#faecea" stroke="#a02318" stroke-width="1.5"/>
+        <text x="636" y="407" text-anchor="middle" fill="#a02318" font-size="9" font-weight="bold">PROLONGED WAR</text>
+        <text x="636" y="420" text-anchor="middle" fill="#5a5248" font-size="8">US(2) Iran(2) Pak(1)</text>
+        <!-- Terminal: Ground Invasion -->
+        <line x1="444" y1="500" x2="700" y2="510" stroke="#a02318" stroke-width="2" marker-end="url(#arr)"/>
+        <rect x="701" y="490" width="160" height="42" rx="4" fill="#faecea" stroke="#a02318" stroke-width="2"/>
+        <text x="781" y="507" text-anchor="middle" fill="#a02318" font-size="9" font-weight="bold">GROUND INVASION ☠</text>
+        <text x="781" y="520" text-anchor="middle" fill="#5a5248" font-size="8">US(1) Iran(1) Pak(1)</text>
+        <!-- Nash pulse on root -->
+        <circle cx="90" cy="300" r="5" fill="#8a5e0a" opacity="0.25">
+          <animate attributeName="r" values="5;15;5" dur="2.5s" repeatCount="indefinite"/>
+          <animate attributeName="opacity" values="0.25;0;0.25" dur="2.5s" repeatCount="indefinite"/>
+        </circle>
+        <!-- Legend -->
+        <rect x="10" y="540" width="310" height="55" rx="4" fill="rgba(237,233,226,0.97)" stroke="#d5d0c6"/>
+        <text x="20" y="557" fill="#8a5e0a" font-size="9" font-weight="bold">LEGEND</text>
+        <circle cx="30"  cy="570" r="4" fill="#165f35"/><text x="40"  y="573" fill="#5a5248" font-size="8">Cooperative path</text>
+        <circle cx="30"  cy="585" r="4" fill="#a02318"/><text x="40"  y="588" fill="#5a5248" font-size="8">Escalation path</text>
+        <circle cx="155" cy="570" r="4" fill="#8a5e0a"/><text x="165" y="573" fill="#5a5248" font-size="8">★ Nash Equilibrium node</text>
+        <text x="155" y="588" fill="#5a5248" font-size="8">Numbers = (US, Iran/Pak) utility</text>
+      </svg>
+    </div>
+    <div style="margin-top:1.5rem;padding:1.2rem;background:var(--surface);border:1px solid rgba(138,94,10,.18);border-radius:6px;" class="fade-up">
+      <p style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--text-muted);">
+        <strong style="color:var(--accent-gold)">Backward Induction Result:</strong> Iran's dominant strategy at Move 3 nodes is to <em>deny talks and resist</em>. Netanyahu's dominant strategy at Move 2 is to <em>obstruct any deal</em>. Therefore, Trump at Move 1 faces: if he offers a Deal, it will be obstructed (payoff 1). If he Escalates, he gets payoff 2–3. <strong style="color:var(--accent-red)">Backward induction predicts escalation as the equilibrium path</strong>, even though a negotiated deal (payoff 3,3) is Pareto superior for both Trump and Iran.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- CH5: DOMINANT STRATEGIES -->
+<section id="dominance">
+  <div class="container">
+    <div class="section-header fade-up">
+      <span class="section-tag">Chapter 5</span>
+      <h2 class="section-title">Dominant Strategies & Strategic Stability</h2>
+      <div class="divider"></div>
+      <p class="section-desc">A dominant strategy is one that is best regardless of what others do. Identifying these reveals the "gravitational pull" of the game — where it inevitably moves without external shocks or structural changes to the payoff matrix.</p>
+    </div>
+    <div class="dom-grid fade-up">
+      <div class="dom-card">
+        <div class="dom-player" style="color:var(--us-color)">🇺🇸 Trump — Weakly Dominant: Escalate While Offering Deal</div>
+        <p style="font-size:12.5px;color:var(--text-muted);margin-bottom:1rem;">Trump's "maximum pressure + deal offer" is weakly dominant. The 5-day pause on energy strikes is not weakness — it is a <em>mixed strategy</em> preserving optionality while watching market and military signals.</p>
+        <div class="dom-strategy">
+          <div class="strat-row"><span class="strat-label">Escalate Only</span><div class="strat-bar-wrap"><div class="strat-bar" style="width:45%;background:var(--accent-red)"></div></div><span class="strat-score">45/100</span></div>
+          <div class="strat-row"><span class="strat-label">Dual-Track (current)</span><div class="strat-bar-wrap"><div class="strat-bar" style="width:80%;background:var(--us-color)"></div></div><span class="strat-score">80/100</span></div>
+          <div class="strat-row"><span class="strat-label">Deal Only</span><div class="strat-bar-wrap"><div class="strat-bar" style="width:30%;background:var(--text-dim)"></div></div><span class="strat-score">30/100</span></div>
+        </div>
+      </div>
+      <div class="dom-card">
+        <div class="dom-player" style="color:var(--iran-color)">🇮🇷 Iran — Dominant: Strategic Ambiguity + Asymmetric Resistance</div>
+        <p style="font-size:12.5px;color:var(--text-muted);margin-bottom:1rem;">Deny talks publicly while signalling willingness privately via intermediaries. Preserves domestic legitimacy, extracts information about US resolve, keeps the Hormuz card playable. Full capitulation is strictly dominated.</p>
+        <div class="dom-strategy">
+          <div class="strat-row"><span class="strat-label">Openly Negotiate</span><div class="strat-bar-wrap"><div class="strat-bar" style="width:20%;background:var(--text-dim)"></div></div><span class="strat-score">20/100</span></div>
+          <div class="strat-row"><span class="strat-label">Deny + Back-channel (current)</span><div class="strat-bar-wrap"><div class="strat-bar" style="width:75%;background:var(--iran-color)"></div></div><span class="strat-score">75/100</span></div>
+          <div class="strat-row"><span class="strat-label">Full Capitulation</span><div class="strat-bar-wrap"><div class="strat-bar" style="width:5%;background:var(--text-dim)"></div></div><span class="strat-score">5/100</span></div>
+        </div>
+      </div>
+      <div class="dom-card">
+        <div class="dom-player" style="color:var(--israel-color)">🇮🇱 Netanyahu — Strictly Dominant: Keep Striking</div>
+        <p style="font-size:12.5px;color:var(--text-muted);margin-bottom:1rem;">Continue strikes regardless of diplomatic developments. Accepting a deal that leaves Iran intact loses him domestically (93% of Israelis want regime change), legally (ICC warrant), and strategically. He <em>cannot</em> accept a premature deal.</p>
+        <div class="dom-strategy">
+          <div class="strat-row"><span class="strat-label">Accept ceasefire</span><div class="strat-bar-wrap"><div class="strat-bar" style="width:10%;background:var(--text-dim)"></div></div><span class="strat-score">10/100</span></div>
+          <div class="strat-row"><span class="strat-label">Keep striking (current)</span><div class="strat-bar-wrap"><div class="strat-bar" style="width:90%;background:var(--israel-color)"></div></div><span class="strat-score">90/100</span></div>
+          <div class="strat-row"><span class="strat-label">Push for ground invasion</span><div class="strat-bar-wrap"><div class="strat-bar" style="width:55%;background:var(--accent-orange)"></div></div><span class="strat-score">55/100</span></div>
+        </div>
+      </div>
+      <div class="dom-card">
+        <div class="dom-player" style="color:var(--pak-color)">🇵🇰 Pakistan — Dominant: Active Neutrality / Soft Mediation</div>
+        <p style="font-size:12.5px;color:var(--text-muted);margin-bottom:1rem;">Loud diplomatic gestures that satisfy US expectations (Asim Malik calling Witkoff) without alienating Iran (Sharif calling Pezeshkian the same day). Full military alliance with the US is strictly dominated — it would rupture the 900km Iran border and trigger Shia blowback.</p>
+        <div class="dom-strategy">
+          <div class="strat-row"><span class="strat-label">Full US alliance</span><div class="strat-bar-wrap"><div class="strat-bar" style="width:15%;background:var(--text-dim)"></div></div><span class="strat-score">15/100</span></div>
+          <div class="strat-row"><span class="strat-label">Active neutrality (current)</span><div class="strat-bar-wrap"><div class="strat-bar" style="width:82%;background:var(--pak-color)"></div></div><span class="strat-score">82/100</span></div>
+          <div class="strat-row"><span class="strat-label">Full Iran support</span><div class="strat-bar-wrap"><div class="strat-bar" style="width:8%;background:var(--text-dim)"></div></div><span class="strat-score">8/100</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CH6: SCENARIOS -->
+<section id="scenarios">
+  <div class="container">
+    <div class="section-header fade-up">
+      <span class="section-tag">Chapter 6</span>
+      <h2 class="section-title">Forward-Looking Scenarios: Probability-Weighted Equilibria</h2>
+      <div class="divider"></div>
+      <p class="section-desc">Game theory maps the probability distribution across outcomes rather than predicting a single result. These five scenarios are probability-weighted based on dominant strategy analysis and current information states.</p>
+    </div>
+    <div class="scenarios-grid fade-up">
+      <div class="scenario-card">
+        <div class="scenario-prob" style="color:var(--accent-gold)">38%</div>
+        <div class="scenario-name">Partial Deal / Managed Ceasefire</div>
+        <div class="scenario-desc">Trump declares victory on limited terms. Iran halts Hormuz blockade; US pauses strikes. Uranium removal negotiated over months. No formal treaty. Pakistan gets credit for hosting talks. Netanyahu complains but accepts reality.</div>
+        <span class="scenario-tag tag-stale">Pareto Sub-optimal Equilibrium</span>
+        <div class="prob-bar" style="background:linear-gradient(90deg,var(--accent-gold),transparent);width:38%"></div>
+        <p style="font-size:11px;color:var(--text-muted);margin-top:.8rem;font-family:'IBM Plex Mono',monospace;">GT basis: Repeated game logic — both US and Iran have future interactions to protect. "Shadow of the future" creates incentive to cooperate. Trump's market pressure and Hormuz pain make this scenario valuable.</p>
+      </div>
+      <div class="scenario-card">
+        <div class="scenario-prob" style="color:var(--accent-red)">30%</div>
+        <div class="scenario-name">Prolonged Attrition War</div>
+        <div class="scenario-desc">Current Nash equilibrium (Escalate, Resist) holds. War drags 6–18 months. US casualties mount. Iran takes attrition damage but regime survives. World economy bleeds from Hormuz. Pakistan under extreme pressure.</div>
+        <span class="scenario-tag tag-war">Current Nash Equilibrium</span>
+        <div class="prob-bar" style="background:linear-gradient(90deg,var(--accent-red),transparent);width:30%"></div>
+        <p style="font-size:11px;color:var(--text-muted);margin-top:.8rem;font-family:'IBM Plex Mono',monospace;">GT basis: The Prisoner's Dilemma trap. Both prefer (Deal, Negotiate) = (3,3) but rational distrust drives them to (Escalate, Resist) = (2,2). Classic coordination failure.</p>
+      </div>
+      <div class="scenario-card">
+        <div class="scenario-prob" style="color:var(--accent-purple)">18%</div>
+        <div class="scenario-name">Regime Collapse / Fragmentation</div>
+        <div class="scenario-desc">Sustained strikes and IRGC fracturing lead to Iranian state collapse. New supreme leader Mojtaba Khamenei fails to consolidate. Power vacuum. IRGC splinters. Some factions negotiate; others fight on. Chaotic non-equilibrium outcome.</div>
+        <span class="scenario-tag tag-chaos">Non-Equilibrium / Shock Outcome</span>
+        <div class="prob-bar" style="background:linear-gradient(90deg,var(--accent-purple),transparent);width:18%"></div>
+        <p style="font-size:11px;color:var(--text-muted);margin-top:.8rem;font-family:'IBM Plex Mono',monospace;">GT basis: Intra-Iran coordination game failure — multiple factions playing incompatible strategies. "Who has authority to negotiate?" = unsolvable with current information asymmetry.</p>
+      </div>
+      <div class="scenario-card">
+        <div class="scenario-prob" style="color:var(--accent-orange)">9%</div>
+        <div class="scenario-name">Ground Invasion</div>
+        <div class="scenario-desc">Trump deploys 82nd Airborne (3,000 troops) after Hormuz remains closed. Netanyahu pushes ground component in Iran/Lebanon. Pakistan forced to choose sides. Hormuz mining triggers naval escalation. Cost: catastrophic for all parties.</div>
+        <span class="scenario-tag tag-war">Pareto Worst Outcome</span>
+        <div class="prob-bar" style="background:linear-gradient(90deg,var(--accent-orange),transparent);width:9%"></div>
+        <p style="font-size:11px;color:var(--text-muted);margin-top:.8rem;font-family:'IBM Plex Mono',monospace;">GT basis: Strictly dominated for the US (payoff 1). Trump has publicly ruled it out. But it is the terminal threat that makes all other strategies credible — a Schelling "Doomsday Machine."</p>
+      </div>
+      <div class="scenario-card">
+        <div class="scenario-prob" style="color:var(--accent-green)">5%</div>
+        <div class="scenario-name">Comprehensive Settlement</div>
+        <div class="scenario-desc">Iran agrees to full 15-point framework. Uranium exported. Proxies disbanded. Hormuz reopens. Formal end to hostilities. Sanctions lifted. Pakistan hosts signing ceremony in Islamabad.</div>
+        <span class="scenario-tag tag-deal">Pareto Optimal — Cooperative Equilibrium</span>
+        <div class="prob-bar" style="background:linear-gradient(90deg,var(--accent-green),transparent);width:5%"></div>
+        <p style="font-size:11px;color:var(--text-muted);margin-top:.8rem;font-family:'IBM Plex Mono',monospace;">GT basis: Requires solving the Commitment Problem — Iran needs guaranteed assurances Trump will not repeat 2018 JCPOA withdrawal. Currently no third-party enforcement mechanism exists.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CH7: PAKISTAN -->
+<section id="pakistan">
+  <div class="container">
+    <div class="section-header fade-up">
+      <span class="section-tag">Chapter 7</span>
+      <h2 class="section-title">Pakistan's Impossible Position: The Mediator's Dilemma</h2>
+      <div class="divider"></div>
+      <p class="section-desc">Pakistan is the most constrained player in this game. Geography, oil dependency, and Muslim identity made it a frontline state without its choosing. Game theory reveals why "active neutrality" is not just a diplomatic choice but a <strong style="color:var(--accent-gold)">uniquely constrained dominant strategy</strong>.</p>
+    </div>
+    <div class="dilemma-grid fade-up">
+      <div class="dilemma-card">
+        <div class="dilemma-title us-side">Pakistan's Payoffs with the US</div>
+        <div class="payoff-row"><span class="payoff-key">Hosts Islamabad talks → deal achieved</span><span class="payoff-val pv-high">+8</span></div>
+        <div class="payoff-row"><span class="payoff-key">Relays 15-point plan (current)</span><span class="payoff-val pv-mid">+5</span></div>
+        <div class="payoff-row"><span class="payoff-key">Allows US military basing</span><span class="payoff-val pv-mid">+4 (short-term)</span></div>
+        <div class="payoff-row"><span class="payoff-key">Refuses to participate</span><span class="payoff-val pv-low">−3</span></div>
+        <div class="payoff-row"><span class="payoff-key">Backs Iran openly</span><span class="payoff-val pv-low">−8</span></div>
+        <p style="font-size:12px;color:var(--text-muted);margin-top:1rem;">ISI chief Asim Malik spoke directly with Witkoff and Kushner. Field Marshal Asim Munir called Trump on March 23. Pakistan has "developed a strong relationship with the Trump administration over the last year." (CNN, March 2026)</p>
+      </div>
+      <div class="dilemma-card">
+        <div class="dilemma-title iran-side">Pakistan's Payoffs with Iran</div>
+        <div class="payoff-row"><span class="payoff-key">Brokers ceasefire → Hormuz reopens</span><span class="payoff-val pv-high">+8 (oil flows)</span></div>
+        <div class="payoff-row"><span class="payoff-key">Relays messages, stays neutral (current)</span><span class="payoff-val pv-mid">+5</span></div>
+        <div class="payoff-row"><span class="payoff-key">Refuses to relay US plan</span><span class="payoff-val pv-mid">+3</span></div>
+        <div class="payoff-row"><span class="payoff-key">Backs US ground war</span><span class="payoff-val pv-low">−7 (900km border!)</span></div>
+        <div class="payoff-row"><span class="payoff-key">Sectarian spillover (Pak Shia)</span><span class="payoff-val pv-low">−9 (domestic chaos)</span></div>
+        <p style="font-size:12px;color:var(--text-muted);margin-top:1rem;">Pakistan gets ~90% of its oil through Hormuz. PM Sharif called Pezeshkian on March 24 to "underscore the urgent need for de-escalation." Islamabad's Shia population makes any anti-Iran stance politically explosive.</p>
+      </div>
+    </div>
+    <div style="margin-top:1.5rem;background:var(--surface);border:1px solid rgba(138,78,0,.2);border-radius:8px;padding:1.6rem;" class="fade-up">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--pak-color);text-transform:uppercase;letter-spacing:.15em;margin-bottom:1rem;">The Ground Invasion Threshold: When Pakistan's Neutrality Breaks</div>
+      <p style="font-size:13px;color:var(--text-muted);">If the US deploys ground forces, Pakistan faces a binary choice it cannot duck. Game theory predicts Pakistan will <strong style="color:var(--text)">publicly denounce the invasion while privately ensuring US forces do not use Pakistani territory</strong> — the only strategy that avoids paying −7 (Iran anger) and −8 (US anger) simultaneously. The expected payoff of this "principled neutrality under fire" strategy is approximately +1 — barely positive, but better than any alternative. This is why Pakistan's framing is so carefully worded: PM Sharif said Pakistan is "ready to host talks" but has never said it backs either side's military objectives.</p>
+    </div>
+  </div>
+</section>
+
+<!-- CH8: WHY IT CAN'T SELF-RESOLVE -->
+<section style="background:var(--surface);padding:80px 0;">
+  <div class="container">
+    <div class="section-header fade-up">
+      <span class="section-tag">Chapter 8</span>
+      <h2 class="section-title">Why the Prisoner's Dilemma Cannot Self-Resolve</h2>
+      <div class="divider"></div>
+      <p class="section-desc">The game-theoretic reason this conflict persists is not irrationality — both Trump and Iran are behaving rationally given their constraints. The problem is structural. Three interlocking failures prevent the Pareto-superior outcome from being reached.</p>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem;margin-top:2rem;" class="fade-up">
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:1.6rem;">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:28px;color:var(--accent-red);font-weight:bold;margin-bottom:.5rem;">01</div>
+        <div style="font-weight:600;color:var(--text);margin-bottom:.6rem;">The Commitment Problem</div>
+        <p style="font-size:12.5px;color:var(--text-muted);">Iran cannot trust any US commitment. Trump withdrew from JCPOA in 2018. Iran gave nuclear concessions; the US gave nothing in return. This is a <em>renegotiation-proof</em> contract problem: any deal Iran signs can be unilaterally revoked by the next president. Without third-party enforcement, Iran's rational strategy is to reject any deal requiring irreversible nuclear concessions upfront.</p>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text-dim);margin-top:1rem;border-top:1px solid var(--border);padding-top:.8rem;">EVIDENCE: "Iran's deepened mistrust" after US joined Israel's surprise attack Feb 28, 2026 — even as Oman declared talks "within reach."</div>
+      </div>
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:1.6rem;">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:28px;color:var(--accent-orange);font-weight:bold;margin-bottom:.5rem;">02</div>
+        <div style="font-weight:600;color:var(--text);margin-bottom:.6rem;">The Veto Player Problem</div>
+        <p style="font-size:12.5px;color:var(--text-muted);">Netanyahu is a veto player in the US-Iran game. Even if Trump and Iran reach a deal, Netanyahu can undermine it by continuing strikes. CNN analysts noted: once Trump "decides this campaign is over, I don't think Israel can continue it" — BUT Netanyahu has demonstrated he will escalate until that moment, making stable agreements nearly impossible.</p>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text-dim);margin-top:1rem;border-top:1px solid var(--border);padding-top:.8rem;">EVIDENCE: Netanyahu says "more to come" even as Trump announces 5-day pause (March 25, 2026). Classic spoiler behaviour in GT terms.</div>
+      </div>
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:1.6rem;">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:28px;color:var(--accent-purple);font-weight:bold;margin-bottom:.5rem;">03</div>
+        <div style="font-weight:600;color:var(--text);margin-bottom:.6rem;">The Authority Problem</div>
+        <p style="font-size:12.5px;color:var(--text-muted);">Who speaks for Iran? The new supreme leader Mojtaba Khamenei has not been publicly seen since being named. Trump says he spoke to a "respected" Iranian leader (possibly Qalibaf); Qalibaf denies it. Even if back-channel deals are struck, the IRGC may not honour what the foreign ministry agreed. Iran's internal game is unresolved.</p>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text-dim);margin-top:1rem;border-top:1px solid var(--border);padding-top:.8rem;">EVIDENCE: "It's not certain anyone entering talks with the US would be speaking on behalf of the regime." — AP, March 2026.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CH9: EQUILIBRIUM -->
+<section id="conclusion">
+  <div class="container">
+    <div class="section-header fade-up">
+      <span class="section-tag">Chapter 9 · Conclusion</span>
+      <h2 class="section-title">The Predicted Equilibrium</h2>
+      <div class="divider"></div>
+      <p class="section-desc">Synthesising all matrices, dominant strategies, backward induction, and structural barriers — here is what game theory predicts as the most likely equilibrium trajectory for the Iran crisis.</p>
+    </div>
+    <div class="equilibrium-box fade-up">
+      <div class="eq-title">Predicted Nash Equilibrium Path — Multi-Player Incomplete Information Game</div>
+      <div class="eq-grid">
+        <div class="eq-item"><div class="eq-actor" style="color:var(--us-color)">🇺🇸 Trump</div><div class="eq-strategy">Dual-Track Pressure</div><div class="eq-outcome">Strikes + Peace Talk Claims</div></div>
+        <div class="eq-item"><div class="eq-actor" style="color:var(--iran-color)">🇮🇷 Iran</div><div class="eq-strategy">Strategic Denial</div><div class="eq-outcome">Back-channel only; Hormuz as leverage</div></div>
+        <div class="eq-item"><div class="eq-actor" style="color:var(--israel-color)">🇮🇱 Netanyahu</div><div class="eq-strategy">Continuous Strikes</div><div class="eq-outcome">Max damage until Trump forces stop</div></div>
+        <div class="eq-item"><div class="eq-actor" style="color:var(--pak-color)">🇵🇰 Pakistan</div><div class="eq-strategy">Active Neutrality</div><div class="eq-outcome">Message relay; no side taken</div></div>
+      </div>
+      <div class="final-verdict">
+        <strong style="color:var(--accent-gold)">THE GAME-THEORETIC VERDICT:</strong> This conflict is locked in a <em>subgame perfect Nash Equilibrium of attrition</em>. Both the US and Iran are behaving rationally given their information and constraints — but their rational choices produce a collectively irrational outcome (war) versus the Pareto-superior alternative (negotiated deal). The three structural barriers — the Commitment Problem, the Veto Player (Netanyahu), and the Authority Problem — make self-resolution without external shock unlikely.
+        <br><br>
+        <strong style="color:var(--text)">What breaks this equilibrium?</strong> Three possible shocks: (1) Iran's Hormuz closure causes so much US economic pain that Trump overrides Netanyahu and forces a deal — <em>changing payoffs</em>. (2) Iran's internal coordination game resolves — a clear authority emerges willing to sign — <em>solving the Authority Problem</em>. (3) A major US military setback changes Trump's cost calculus — <em>updating beliefs</em>. Until one of these shocks occurs, the game predicts a <strong style="color:var(--accent-red)">prolonged, attritional stalemate punctuated by periodic diplomatic signals</strong> — exactly what we are seeing in March 2026.
+        <br><br>
+        <strong style="color:var(--pak-color)">Pakistan's endgame:</strong> Pakistan achieves its best equilibrium payoff only if a ceasefire is reached before a ground invasion. The 5-day pause Trump granted is Pakistan's window. If talks fail, Pakistan enters a strictly dominated outcome regardless of what it chooses — a trapped mediator in a war that was never its to control.
+      </div>
+    </div>
+
+    <!-- Interactive Calculator -->
+    <div style="margin-top:3rem;">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--accent-gold);text-transform:uppercase;letter-spacing:.15em;margin-bottom:1.5rem;">Interactive: Adjust the Variables, See How Scenarios Shift</div>
+      <div class="calc-wrap fade-up">
+        <div class="calc-controls">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text-muted);margin-bottom:1.5rem;text-transform:uppercase;letter-spacing:.1em;">Adjust Key Game Parameters</div>
+          <div class="slider-group">
+            <div class="slider-label"><span>Iran's Trust in US Commitment</span><span class="slider-val" id="trust-val">20%</span></div>
+            <input type="range" min="0" max="100" value="20" id="trust-slider" oninput="updateCalc()">
+          </div>
+          <div class="slider-group">
+            <div class="slider-label"><span>Netanyahu's Veto Power</span><span class="slider-val" id="veto-val">85%</span></div>
+            <input type="range" min="0" max="100" value="85" id="veto-slider" oninput="updateCalc()">
+          </div>
+          <div class="slider-group">
+            <div class="slider-label"><span>Economic Pain from Hormuz Closure</span><span class="slider-val" id="hormuz-val">70%</span></div>
+            <input type="range" min="0" max="100" value="70" id="hormuz-slider" oninput="updateCalc()">
+          </div>
+          <div class="slider-group">
+            <div class="slider-label"><span>Pakistan Mediation Effectiveness</span><span class="slider-val" id="pak-val">50%</span></div>
+            <input type="range" min="0" max="100" value="50" id="pak-slider" oninput="updateCalc()">
+          </div>
+        </div>
+        <div class="calc-output">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text-muted);margin-bottom:1.5rem;text-transform:uppercase;letter-spacing:.1em;">Scenario Probability Distribution</div>
+          <div class="outcome-bar-group">
+            <div class="outcome-bar-label"><span class="outcome-bar-name">Managed Ceasefire / Partial Deal</span><span class="outcome-bar-pct" id="pct-deal">38%</span></div>
+            <div class="outcome-bar-track"><div class="outcome-bar-fill" id="bar-deal" style="width:38%;background:var(--accent-gold)"></div></div>
+          </div>
+          <div class="outcome-bar-group">
+            <div class="outcome-bar-label"><span class="outcome-bar-name">Prolonged Attrition War</span><span class="outcome-bar-pct" id="pct-war">30%</span></div>
+            <div class="outcome-bar-track"><div class="outcome-bar-fill" id="bar-war" style="width:30%;background:var(--accent-red)"></div></div>
+          </div>
+          <div class="outcome-bar-group">
+            <div class="outcome-bar-label"><span class="outcome-bar-name">Regime Collapse / Fragmentation</span><span class="outcome-bar-pct" id="pct-collapse">18%</span></div>
+            <div class="outcome-bar-track"><div class="outcome-bar-fill" id="bar-collapse" style="width:18%;background:var(--accent-purple)"></div></div>
+          </div>
+          <div class="outcome-bar-group">
+            <div class="outcome-bar-label"><span class="outcome-bar-name">Ground Invasion</span><span class="outcome-bar-pct" id="pct-ground">9%</span></div>
+            <div class="outcome-bar-track"><div class="outcome-bar-fill" id="bar-ground" style="width:9%;background:var(--accent-orange)"></div></div>
+          </div>
+          <div class="outcome-bar-group">
+            <div class="outcome-bar-label"><span class="outcome-bar-name">Comprehensive Settlement</span><span class="outcome-bar-pct" id="pct-comp">5%</span></div>
+            <div class="outcome-bar-track"><div class="outcome-bar-fill" id="bar-comp" style="width:5%;background:var(--accent-green)"></div></div>
+          </div>
+          <div style="margin-top:1.5rem;padding:.8rem;background:rgba(138,94,10,.06);border-radius:4px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text-muted);border:1px solid rgba(138,94,10,.12);" id="calc-note">
+            Current equilibrium: Escalation + strategic denial. The game is locked.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SOURCES -->
+<section style="background:var(--surface);padding:60px 0 80px;">
+  <div class="container">
+    <div class="sources-box">
+      <strong>SOURCES & EVIDENCE BASE</strong> · All game-theoretic claims grounded in real statements and events:<br><br>
+      Al Jazeera (March 25, 2026) · PBS NewsHour (March 25, 2026) · CNN Politics (March 23–25, 2026) · The Washington Post (March 25, 2026) ·
+      Euronews (March 25, 2026) · NBC News (March 24, 2026) · Foreign Policy (March 19, 2026) · Carnegie Endowment (March 20 &amp; 22, 2026) ·
+      Newsweek (March 24, 2026) · Axios (March 25, 2026) · IranIntl (March 24, 2026) · ORF Online (March 25, 2026) ·
+      Arab Center DC (March 4, 2026) · CS Monitor (March 12, 2026) · Wikipedia: 2025–2026 Iran–US Negotiations; 2026 Iran War<br><br>
+      <strong>GAME THEORY FRAMEWORK</strong> · Nash (1950, 1951) · Schelling (1960, The Strategy of Conflict) · Selten (1965, Subgame Perfect Equilibrium) ·
+      Harsanyi (1967–68, Incomplete Information Games) · Fudenberg &amp; Tirole (1991, Game Theory)
+    </div>
+  </div>
+</section>
+
+<script>
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+  }, { threshold: 0.08 });
+  document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+
+  function updateCalc() {
+    const trust  = parseInt(document.getElementById('trust-slider').value);
+    const veto   = parseInt(document.getElementById('veto-slider').value);
+    const hormuz = parseInt(document.getElementById('hormuz-slider').value);
+    const pak    = parseInt(document.getElementById('pak-slider').value);
+    document.getElementById('trust-val').textContent  = trust  + '%';
+    document.getElementById('veto-val').textContent   = veto   + '%';
+    document.getElementById('hormuz-val').textContent = hormuz + '%';
+    document.getElementById('pak-val').textContent    = pak    + '%';
+
+    const raw = [
+      Math.max(5, 38 + trust*0.25 + hormuz*0.15 + pak*0.12 - veto*0.2),
+      Math.max(5, 30 - trust*0.1  - hormuz*0.1  + veto*0.1 - pak*0.05),
+      Math.max(2, 18 + veto*0.08  - trust*0.05),
+      Math.max(1,  9 + veto*0.05  - hormuz*0.05 - pak*0.03),
+      Math.max(1,  5 + trust*0.1  + pak*0.05    - veto*0.08)
+    ];
+    const total = raw.reduce((a,b) => a+b, 0);
+    const pcts  = raw.map(v => Math.round(v / total * 100));
+    pcts[0] += 100 - pcts.reduce((a,b) => a+b, 0);
+
+    ['deal','war','collapse','ground','comp'].forEach((id, i) => {
+      document.getElementById('pct-' + id).textContent = pcts[i] + '%';
+      document.getElementById('bar-' + id).style.width = pcts[i] + '%';
+    });
+
+    const n = document.getElementById('calc-note');
+    if      (pcts[0] > 45) n.textContent = '↑ Mediated deal becoming likely. Pakistan window is opening.';
+    else if (pcts[1] > 40) n.textContent = "⚠ Attrition war dominant. Both sides locked in Prisoner's Dilemma.";
+    else if (pcts[3] > 18) n.textContent = '☠ Ground invasion risk elevated. Hormuz must be addressed urgently.';
+    else if (pcts[4] > 12) n.textContent = '★ Comprehensive deal within reach if commitment problem is solved.';
+    else                   n.textContent = 'Multi-scenario ambiguity. Game is sensitive to current parameters.';
+  }
+</script>
+</body>
+</html>
